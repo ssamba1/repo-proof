@@ -23,3 +23,28 @@ target/
 # OS
 .DS_Store
 Thumbs.db
+
+# Secrets / sensitive — never commit (defense in depth; a pre-commit hook also blocks these)
+.env
+.env.*
+*.env
+secrets.*
+credentials*
+*.pem
+*.key
+*.pfx
+*.p12
+*.keystore
+id_rsa
+id_ed25519
+*.crt
+.netrc
+.npmrc
+.pypirc
+*.tfvars
+service-account*.json
+gha-creds-*.json
+auth.json
+.aws/
+.ssh/
+

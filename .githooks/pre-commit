@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# RepoProof secret-blocker. Refuses any commit whose staged content contains a likely
+# credential. Defense in depth alongside .gitignore. Enable with:
+#   git config core.hooksPath .githooks
+set -euo pipefail
+
+# Patterns for high-confidence secret material.
+PATTERNS='(gh[pousr]_[A-Za-z0-9]{20,})|(github_pat_[A-Za-z0-9_]{20,})|(AKIA[0-9A-Z]{16})|(sk-[A-Za-z0-9]{20,})|(xox[baprs]-[0-9A-Za-z-]{10,})|(-----BEGIN [A-Z ]*PRIVATE KEY-----)|(AIza[0-9A-Za-z_-]{30,})|((password|passwd|secret|api[_-]?key|access[_-]?key|client[_-]?secret|auth[_-]?token)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{8,})'
+
+# Filenames that should never be committed regardless of content.
+NAME_DENY='(^|/)(\.env(\..*)?|.*\.pem|.*\.key|.*\.p12|.*\.pfx|id_rsa|id_ed25519|\.netrc|\.npmrc|\.pypirc|credentials.*|service-account.*\.json)$'
+
+fail=0
+
+# 1) Block secret-shaped filenames.
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if printf '%s\n' "$f" | grep -qEi "$NAME_DENY"; then
+    echo "BLOCKED: '$f' looks like a secret file and must not be committed." >&2
+    fail=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+# 2) Block secret-shaped content in the staged diff (added lines only).
+added="$(git diff --cached --diff-filter=ACM -U0 | grep -E '^\+' | grep -vE '^\+\+\+' || true)"
+if printf '%s' "$added" | grep -qEi "$PATTERNS"; then
+  echo "BLOCKED: staged changes contain something that looks like a credential." >&2
+  echo "Matched near:" >&2
+  printf '%s\n' "$added" | grep -nEi "$PATTERNS" | head -5 >&2
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "Commit aborted by RepoProof secret-blocker. If this is a false positive, review carefully" >&2
+  echo "and re-commit with: git commit --no-verify" >&2
+  exit 1
+fi
+exit 0

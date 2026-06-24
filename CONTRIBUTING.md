@@ -35,3 +35,16 @@ README quickstart — if you change the Quickstart section, keep it runnable.
 1. Extend `detect.detect_lang` / `detect_kind`.
 2. Add install verbs/markers in `extract.py` and `references/languages.md`.
 3. Add `fixtures/<lang>-working` and `<lang>-broken` and matching tests.
+
+## Secret hygiene
+
+This repo ships a pre-commit hook that refuses to commit credential-shaped content or
+secret-shaped filenames. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`.gitignore` also excludes `.env`, keys, and credential files. Never commit real secrets;
+if the hook ever false-positives, review carefully before using `git commit --no-verify`.
+Use the GitHub `noreply` commit email to keep your personal address off the public history.
