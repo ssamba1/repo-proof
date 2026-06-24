@@ -48,14 +48,39 @@ the problem, not the solution.
 
 ## Usage
 
-```bash
-proof verify                 # verify the quickstart in the current repo
-proof verify path/to/repo    # verify another repo
-proof verify --json          # machine-readable report + CI exit code
-proof verify --write         # apply a proposed doc fix in place (off by default)
-proof demo                   # capture a CLI demo into docs/
-proof demo --web http://localhost:3000   # screenshot a running web app
+There are three ways to run it; pick whichever fits.
+
+**1. Inside Claude Code (recommended)** — after `install.sh`, just ask:
+
 ```
+/proof verify
+/proof demo
+```
+
+**2. Direct, no install** — from a clone of this repo, target any other repo by path:
+
+```bash
+python -m proof.scripts.cli verify path/to/repo
+python -m proof.scripts.cli demo path/to/repo
+```
+
+**3. From the installed skill** — works from any directory:
+
+```bash
+python "$HOME/.claude/skills/proof/run.py" verify path/to/repo   # %USERPROFILE% on Windows
+```
+
+Common flags (any of the forms above):
+
+```bash
+--json            # machine-readable report + CI exit code
+--write           # apply a proposed doc fix in place (off by default)
+--mode subprocess # force subprocess sandbox (default: auto-detect Docker)
+--web http://localhost:3000   # demo: screenshot a running web app
+```
+
+> Want a bare `proof` command on your PATH? Install the package: `pip install .` (or
+> `pipx install .`). `install.sh` deliberately does **not** touch your Python environment.
 
 ### Exit codes (for CI)
 
