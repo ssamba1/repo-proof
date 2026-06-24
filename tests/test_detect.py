@@ -16,6 +16,8 @@ from proof.scripts.models import Lang, ProjectKind
         ("rust-broken", Lang.RUST),
         ("go-working", Lang.GO),
         ("go-broken", Lang.GO),
+        ("ruby-working", Lang.RUBY),
+        ("ruby-broken", Lang.RUBY),
     ],
 )
 def test_detect_lang(fixture, lang):
@@ -24,7 +26,7 @@ def test_detect_lang(fixture, lang):
 
 @pytest.mark.parametrize(
     "fixture",
-    ["py-working", "node-working", "rust-working", "go-working"],
+    ["py-working", "node-working", "rust-working", "go-working", "ruby-working"],
 )
 def test_detect_kind_is_cli(fixture):
     repo = FIXTURES / fixture

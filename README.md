@@ -225,7 +225,7 @@ vhs, and Playwright are optional and degrade gracefully when absent.
 - **Python 3.10+** (required).
 - **Optional**, only if present — used when available, skipped cleanly when not:
   - Docker (preferred sandbox isolation)
-  - Node / Rust / Go toolchains (to verify those ecosystems)
+  - Node / Rust / Go / Ruby toolchains (to verify those ecosystems)
   - [`vhs`](https://github.com/charmbracelet/vhs) (CLI demo GIFs)
   - Playwright (`pip install 'repo-proof[web]'`) for web screenshots
 
@@ -344,12 +344,12 @@ Honest about the moat: any general agent *can be prompted* to do this once. Repo
 ## Benchmarks
 
 The core claim — *zero-config extraction from arbitrary prose* — is measured, not asserted.
-[`tools/benchmark.py`](tools/benchmark.py) runs the extractor against 16 popular real-world
-repos (httpie, requests, ripgrep, fzf, express, …). Honest result: **~9/16** extracted the exact
-intended quickstart and **4/16** were correctly identified as install-only (libraries with no
-shell run), so **~13/16 handled correctly** (up from ~6/16 before the extractor was hardened
-against this corpus). The remaining miss is a README that buries usage beneath a long install
-matrix — a tracked limitation, not a hidden one.
+[`tools/benchmark.py`](tools/benchmark.py) runs the extractor against 20 popular real-world
+repos across 5 languages (httpie, requests, ripgrep, fzf, express, rails, …). Honest result:
+**~10/20** extracted the exact intended quickstart and **4/20** were correctly identified as
+install-only (libraries with no shell run), so **~14/20 handled correctly** (up from a ~6/16
+baseline before the extractor was hardened). The misses are install-heavy READMEs (ripgrep) and
+READMEs with no fenced quickstart block at all — tracked limitations, not hidden ones.
 
 Full results and methodology: [`docs/benchmark.md`](docs/benchmark.md). Reproduce with
 `python tools/benchmark.py`.
@@ -379,11 +379,11 @@ Full results and methodology: [`docs/benchmark.md`](docs/benchmark.md). Reproduc
 - [x] Integrity: doc-error vs `real_code_bug` separation
 - [x] `demo`: real GIF / text transcript / web screenshot
 - [x] Docker + subprocess sandbox, secret-scrubbed env, run-on-copy
-- [x] Python / Node / Rust / Go detection; CI on Ubuntu + Windows
+- [x] Python / Node / Rust / Go / Ruby detection; CI on Ubuntu + Windows
 - [ ] Doc-code **drift guard** (CI action that fails when docs diverge from code)
 - [ ] Web demo **auto-boot** (port discovery + readiness, no `--web` needed)
 - [ ] Benchmark corpus (extraction-success + false-fix rate across N real repos)
-- [ ] More ecosystems (Ruby, Java, .NET)
+- [ ] More ecosystems (Java, .NET, PHP)
 
 See the [open issues](https://github.com/ssamba1/repo-proof/issues) for the full list.
 

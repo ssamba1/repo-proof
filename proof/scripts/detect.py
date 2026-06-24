@@ -27,6 +27,10 @@ _WEB_DEP_MARKERS = (
     "actix-web",
     "axum",
     "rocket",
+    "rails",
+    "sinatra",
+    "hanami",
+    "rack",
 )
 
 
@@ -39,8 +43,16 @@ def detect_lang(repo: Path) -> Lang:
         return Lang.NODE
     if any((repo / f).is_file() for f in ("pyproject.toml", "setup.py", "requirements.txt")):
         return Lang.PYTHON
+    if (repo / "Gemfile").is_file() or any(repo.glob("*.gemspec")):
+        return Lang.RUBY
     # Fall back to file-extension census.
-    counts: dict[Lang, int] = {Lang.PYTHON: 0, Lang.NODE: 0, Lang.RUST: 0, Lang.GO: 0}
+    counts: dict[Lang, int] = {
+        Lang.PYTHON: 0,
+        Lang.NODE: 0,
+        Lang.RUST: 0,
+        Lang.GO: 0,
+        Lang.RUBY: 0,
+    }
     for p in repo.rglob("*"):
         if not p.is_file():
             continue
@@ -53,6 +65,8 @@ def detect_lang(repo: Path) -> Lang:
             counts[Lang.RUST] += 1
         elif suf == ".go":
             counts[Lang.GO] += 1
+        elif suf == ".rb":
+            counts[Lang.RUBY] += 1
     best = max(counts, key=lambda k: counts[k])
     return best if counts[best] > 0 else Lang.UNKNOWN
 
@@ -86,11 +100,18 @@ def detect_kind(repo: Path, lang: Lang) -> ProjectKind:
         blob = _read_text(repo / "Cargo.toml").lower()
     elif lang == Lang.GO:
         blob = _read_text(repo / "go.mod").lower()
+    elif lang == Lang.RUBY:
+        blob = _read_text(repo / "Gemfile").lower()
+        for gs in repo.glob("*.gemspec"):
+            blob += _read_text(gs).lower()
 
     if any(m in blob for m in _WEB_DEP_MARKERS):
         return ProjectKind.WEB
     # A runnable entrypoint suggests CLI; otherwise treat as library.
-    entry_names = ("main.py", "__main__.py", "app.py", "cli.py", "main.rs", "main.go", "index.js")
+    entry_names = (
+        "main.py", "__main__.py", "app.py", "cli.py",
+        "main.rs", "main.go", "index.js", "main.rb", "app.rb",
+    )  # fmt: skip
     if any((repo / e).is_file() for e in entry_names) or (repo / "src" / "main.rs").is_file():
         return ProjectKind.CLI
     if lang == Lang.UNKNOWN:

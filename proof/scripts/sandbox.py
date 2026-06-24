@@ -67,6 +67,7 @@ _DOCKER_IMAGE = {
     "node": "node:20-slim",
     "rust": "rust:1-slim",
     "go": "golang:1-bookworm",
+    "ruby": "ruby:3-slim",
 }
 
 

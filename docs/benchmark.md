@@ -5,8 +5,8 @@ Measured against real, popular GitHub repositories. Regenerate with
 
 ## Tier 1 — extraction (the moat claim)
 
-**12/16** repos: a runnable quickstart command was extracted from arbitrary
-prose with zero config. **4/16** had an install step but no shell run
+**13/20** repos: a runnable quickstart command was extracted from arbitrary
+prose with zero config. **4/20** had an install step but no shell run
 command (typical of libraries whose example is a code snippet, not a CLI invocation).
 
 | Repo | Lang | Kind | Result | Extracted run command |
@@ -27,16 +27,21 @@ command (typical of libraries whose example is a code snippet, not a CLI invocat
 | spf13/cobra | go | lib | install_only | — |
 | junegunn/fzf | go | cli | found_run | `eval "$(fzf --bash)"` |
 | charmbracelet/glow | go | cli | found_run | `nix-shell -p glow --command glow` |
+| rails/rails | ruby | lib | found_run | `rails new myapp` |
+| fastlane/fastlane | ruby | cli | none | — |
+| Homebrew/brew | ruby | cli | none | — |
+| jekyll/jekyll | ruby | cli | none | — |
 
 ### Honest read
 
 `found_run` means *a* command was extracted, not that it is guaranteed the intended one.
-Manual review of this corpus: about **9/16** extracted the exact intended quickstart and
-**4/16** were correctly identified as install-only (libraries whose example is a code
-snippet, not a CLI invocation) — so ~**13/16 handled correctly**, up from ~6/16
-before the extractor was hardened against this corpus. The remaining miss is a README
-that buries usage beneath a long distro-specific install matrix (e.g. ripgrep).
+Manual review of this corpus: about **10/20** extracted the exact intended quickstart and
+**4/20** were correctly identified as install-only (libraries whose example is a code
+snippet, not a CLI invocation) — so ~**14/20 handled correctly**, up from a ~6/16 baseline
+before the extractor was hardened. The misses fall into two buckets: a README that buries
+usage beneath a long install matrix (ripgrep), and READMEs with no fenced quickstart block
+at all (fastlane, Homebrew, jekyll → `none`).
 
-**Known limitation / roadmap:** install-method-heavy READMEs whose usage examples are not
-in a fenced shell block near a usage heading.
+**Known limitation / roadmap:** install-method-heavy READMEs, and READMEs that show usage
+as prose or images rather than in a fenced shell block.
 

@@ -17,6 +17,7 @@ class Lang(str, Enum):
     NODE = "node"
     RUST = "rust"
     GO = "go"
+    RUBY = "ruby"
     UNKNOWN = "unknown"
 
 

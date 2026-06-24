@@ -26,6 +26,12 @@ How RepoProof recognizes and runs each ecosystem.
 - Build/run: `go build`, `go run main.go`, `go get`.
 - Web markers: detected from imported frameworks where present.
 
+## Ruby
+- Markers: `Gemfile`, `*.gemspec`, `.rb` files.
+- Install verbs: `gem install`, `bundle install`.
+- Run: `ruby main.rb`, `ruby app.rb`.
+- Web markers: rails, sinatra, hanami, rack.
+
 ## Placeholders
 Any command containing `<...>`, `YOUR_...`, `path/to/...`, `example.com`, `{{...}}`, or `${ENV}`
 is treated as needing user input and is not executed (outcome `needs_input`).

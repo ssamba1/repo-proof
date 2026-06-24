@@ -46,6 +46,19 @@ def test_rust_broken_is_real_code_bug_not_fixed():
     assert rep.proposed_edits == []
 
 
+@pytest.mark.skipif(not have("ruby"), reason="ruby not installed")
+def test_ruby_working_verified():
+    rep = verify_repo(FIXTURES / "ruby-working", mode="subprocess")
+    assert rep.outcome is Outcome.VERIFIED
+
+
+@pytest.mark.skipif(not have("ruby"), reason="ruby not installed")
+def test_ruby_broken_is_fixed():
+    rep = verify_repo(FIXTURES / "ruby-broken", mode="subprocess")
+    assert rep.outcome is Outcome.FIXED
+    assert rep.proposed_edits == [("ruby man.rb", "ruby main.rb")]
+
+
 def test_needs_input(tmp_path):
     (tmp_path / "pyproject.toml").write_text("[project]\nname='x'\n", encoding="utf-8")
     (tmp_path / "README.md").write_text(
