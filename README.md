@@ -334,6 +334,20 @@ Honest about the moat: any general agent *can be prompted* to do this once. Repo
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Benchmarks
+
+The core claim — *zero-config extraction from arbitrary prose* — is measured, not asserted.
+[`tools/benchmark.py`](tools/benchmark.py) runs the extractor against 16 popular real-world
+repos (httpie, requests, ripgrep, fzf, express, …). Honest result: **~8/16** extracted the exact
+intended quickstart and **4/16** were correctly identified as install-only (libraries with no
+shell run), so **~12/16 handled correctly**. The misses are install-method-heavy READMEs that
+list many distro commands before any usage — a tracked limitation, not a hidden one.
+
+Full results and methodology: [`docs/benchmark.md`](docs/benchmark.md). Reproduce with
+`python tools/benchmark.py`.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Safety & Security
 
 - **Run on a copy.** Quickstarts execute in a disposable temp copy of the repo (excluding
