@@ -338,10 +338,11 @@ Honest about the moat: any general agent *can be prompted* to do this once. Repo
 
 The core claim — *zero-config extraction from arbitrary prose* — is measured, not asserted.
 [`tools/benchmark.py`](tools/benchmark.py) runs the extractor against 16 popular real-world
-repos (httpie, requests, ripgrep, fzf, express, …). Honest result: **~8/16** extracted the exact
+repos (httpie, requests, ripgrep, fzf, express, …). Honest result: **~9/16** extracted the exact
 intended quickstart and **4/16** were correctly identified as install-only (libraries with no
-shell run), so **~12/16 handled correctly**. The misses are install-method-heavy READMEs that
-list many distro commands before any usage — a tracked limitation, not a hidden one.
+shell run), so **~13/16 handled correctly** (up from ~6/16 before the extractor was hardened
+against this corpus). The remaining miss is a README that buries usage beneath a long install
+matrix — a tracked limitation, not a hidden one.
 
 Full results and methodology: [`docs/benchmark.md`](docs/benchmark.md). Reproduce with
 `python tools/benchmark.py`.

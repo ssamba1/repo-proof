@@ -19,17 +19,27 @@ import shlex
 
 from .models import Command, StepKind
 
-# Headings under which a quickstart is likely to live, best first.
-_HEADING_PRIORITY = (
+# A run command lives in usage/example/quickstart sections — NOT in an install matrix. These
+# are searched (best first) when choosing the runnable example; install headings rank lowest.
+_RUN_HEADINGS = (
     "quick start",
     "quickstart",
     "getting started",
-    "installation",
-    "install",
     "usage",
+    "example",
+    "demo",
     "running",
     "run",
-    "example",
+)
+
+# Install commands are collected from these sections (best first).
+_INSTALL_HEADINGS = (
+    "installation",
+    "install",
+    "quick start",
+    "quickstart",
+    "getting started",
+    "setup",
 )
 
 _SHELL_LANGS = {"", "bash", "sh", "shell", "console", "zsh", "text", "shellsession"}
@@ -195,6 +205,15 @@ def _is_plausible_program(token: str) -> bool:
     return "/" in token or "." in token or bool(_PROG_RE.match(token))
 
 
+def _is_installer(token: str) -> bool:
+    """A bootstrap installer script (e.g. `~/.fzf/install`, `./setup.sh`) is a setup step, not
+    the project's runnable example."""
+    base = token.rsplit("/", 1)[-1].lower()
+    return base in {"install", "installer", "setup", "bootstrap"} or token.lower().endswith(
+        ("install.sh", "installer.sh", "setup.sh", "get.sh", "bootstrap.sh")
+    )
+
+
 def _to_command(line_no: int, text: str) -> Command | None:
     if _DANGEROUS.search(text):
         return None
@@ -218,52 +237,82 @@ def _to_command(line_no: int, text: str) -> Command | None:
     )
 
 
-def _block_score(block: _Block) -> int:
+def _run_score(block: _Block) -> int:
+    """Priority for finding the *run* command. Usage/example beat install sections; dev blocks
+    are excluded so a build script is never mistaken for the quickstart."""
     if block.lang not in _SHELL_LANGS:
         return -1
     if any(k in block.heading for k in _DEPRIORITIZE):
-        return 0  # dev/build instructions: only used if nothing better exists
-    for rank, key in enumerate(_HEADING_PRIORITY):
+        return -1
+    for rank, key in enumerate(_RUN_HEADINGS):
         if key in block.heading:
             return 100 - rank
-    return 1  # shell block under an unrecognized heading still counts, low priority
+    if "install" in block.heading:
+        return 5  # an install section is the last place to look for the runnable example
+    return 10  # unlabeled shell block: medium (often an inline usage example)
+
+
+def _install_score(block: _Block) -> int:
+    """Priority for collecting *install* commands. 0 means 'do not take installs from here'."""
+    if block.lang not in _SHELL_LANGS:
+        return 0
+    for rank, key in enumerate(_INSTALL_HEADINGS):
+        if key in block.heading:
+            return 100 - rank
+    return 0
+
+
+def _commands_in(block: _Block) -> list[Command]:
+    cmds: list[Command] = []
+    for line_no, text in _join_continuations(block.lines):
+        for piece in _COMPOUND.split(text):
+            piece = piece.strip()
+            if not piece:
+                continue
+            cmd = _to_command(line_no, piece)
+            if cmd is not None:
+                cmds.append(cmd)
+    return cmds
 
 
 def extract_quickstart(readme: str) -> list[Command]:
     """Return the ordered quickstart: install step(s) followed by the first run command.
 
-    Empty list means no quickstart could be located (caller maps to EXTRACTION_FAILED).
+    Two-phase: the install steps come from the primary install section, while the run command
+    is taken from a usage/example/quickstart block (an install matrix is searched last). Empty
+    list means no quickstart could be located (caller maps to EXTRACTION_FAILED).
     """
-    blocks = sorted(_iter_blocks(readme), key=_block_score, reverse=True)
-    blocks = [b for b in blocks if _block_score(b) >= 0]
-    if not blocks:
-        return []
+    blocks = _iter_blocks(readme)
 
+    # Phase 1: install steps from the highest-priority install section only (avoids pulling in
+    # every alternative install method scattered across the README).
     install: list[Command] = []
+    install_blocks = sorted(
+        (b for b in blocks if _install_score(b) > 0), key=_install_score, reverse=True
+    )
+    if install_blocks:
+        for cmd in _commands_in(install_blocks[0]):
+            if cmd.kind is StepKind.INSTALL and cmd not in install:
+                install.append(cmd)
+            elif cmd.argv[0].lower() in _RUN_SKIP and cmd.needs_input and cmd not in install:
+                # Keep setup like `export API_KEY=<your-key>` so needs_input still surfaces.
+                install.append(cmd)
+
+    # Phase 2: the runnable example, preferring usage/example over install sections.
     run: Command | None = None
-    for block in blocks:
-        for line_no, text in _join_continuations(block.lines):
-            for piece in _COMPOUND.split(text):
-                piece = piece.strip()
-                if not piece:
-                    continue
-                cmd = _to_command(line_no, piece)
-                if cmd is None:
-                    continue
-                if cmd.kind is StepKind.INSTALL:
-                    if cmd not in install:
-                        install.append(cmd)
-                elif cmd.argv[0].lower() in _RUN_SKIP:
-                    # Setup-only (cd/export/...). Keep it only if it carries a placeholder, so
-                    # `export API_KEY=<your-key>` still surfaces as needs_input.
-                    if cmd.needs_input and cmd not in install:
-                        install.append(cmd)
-                elif run is None:
-                    run = cmd
+    for block in sorted((b for b in blocks if _run_score(b) >= 0), key=_run_score, reverse=True):
+        for cmd in _commands_in(block):
+            if (
+                cmd.kind is StepKind.RUN
+                and cmd.argv[0].lower() not in _RUN_SKIP
+                and not _is_installer(cmd.argv[0])
+            ):
+                run = cmd
+                break
         if run is not None:
             break
 
     commands = list(install)
-    if run is not None:
+    if run is not None and run not in commands:
         commands.append(run)
     return commands
