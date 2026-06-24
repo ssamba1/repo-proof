@@ -1,0 +1,6 @@
+{
+  "name": "node-broken",
+  "version": "1.0.0",
+  "private": true,
+  "bin": { "node-broken": "index.js" }
+}

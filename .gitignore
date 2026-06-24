@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# RepoProof working dirs
+.proof/
+docs/proof-demo.gif
+docs/proof-demo.png
+
+# Node (in fixtures, generated)
+node_modules/
+
+# Rust (in fixtures, generated)
+target/
+
+# OS
+.DS_Store
+Thumbs.db

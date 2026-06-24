@@ -1,0 +1,8 @@
+[package]
+name = "rust-broken"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "rust-broken"
+path = "src/main.rs"

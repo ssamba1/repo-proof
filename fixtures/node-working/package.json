@@ -1,0 +1,6 @@
+{
+  "name": "node-working",
+  "version": "1.0.0",
+  "private": true,
+  "bin": { "node-working": "index.js" }
+}

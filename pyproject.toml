@@ -1,0 +1,32 @@
+[project]
+name = "repo-proof"
+version = "0.1.0"
+description = "Verified READMEs + real demos for Claude Code — prove the quickstart works, then show it."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "RepoProof contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.5"]
+web = ["playwright>=1.40"]
+
+[project.scripts]
+proof = "proof.scripts.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["proof*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["SIM105"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["error::DeprecationWarning"]
