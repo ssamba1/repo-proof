@@ -79,7 +79,12 @@ def capture(repo: Path, out_dir: Path, timeout_s: int = 120) -> DemoResult:
 
 def _text_fallback(repo: Path, cmd: Command, out_dir: Path, timeout_s: int) -> DemoResult:
     lang = detect_lang(repo)
-    results = sandbox.run_quickstart([cmd], repo, lang=lang.value, timeout_s=timeout_s)
+    # Demos run the project's own entrypoint on the host — consistent with the vhs path, which
+    # records on the host too. We force subprocess rather than 'auto' so the capture does not
+    # depend on a Linux container image (Docker on Windows runners cannot run python:slim).
+    results = sandbox.run_quickstart(
+        [cmd], repo, lang=lang.value, mode="subprocess", timeout_s=timeout_s
+    )
     out = results[0] if results else None
     transcript = out_dir / "proof-demo.md"
     body = out.stdout if out else ""
