@@ -241,6 +241,13 @@ The installer copies three skills into `~/.claude/skills/` (`proof`, `proof-veri
 `proof-demo`) and **writes nothing else** — no `curl | bash`, no credentials, no telemetry,
 nothing outside `~/.claude`.
 
+**Or install as a Claude Code plugin:**
+
+```
+/plugin marketplace add ssamba1/repo-proof
+/plugin install repo-proof@repo-proof
+```
+
 Want a bare `proof` command on your PATH instead? `pip install .` (or `pipx install .`).
 
 ### Quick start

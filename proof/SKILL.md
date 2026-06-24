@@ -30,7 +30,9 @@ python "$HOME/.claude/skills/proof/run.py" verify <repo-path> --json
 python "$HOME/.claude/skills/proof/run.py" demo <repo-path> --out docs
 ```
 
-(When developing inside the RepoProof repo itself, `python -m proof.scripts.cli ...` is equivalent.)
+(When installed as a Claude Code plugin, the package lives at `${CLAUDE_PLUGIN_ROOT}/proof`, so
+use `python "${CLAUDE_PLUGIN_ROOT}/proof/run.py" ...`. When developing inside the RepoProof repo
+itself, `python -m proof.scripts.cli ...` is equivalent.)
 
 Always prefer `--json` when you (the agent) need to act on the result; show the human the
 plain (non-JSON) output. Parse the `outcome` field and respond per the table below.

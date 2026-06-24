@@ -1,0 +1,13 @@
+{
+  "name": "repo-proof",
+  "version": "0.1.0",
+  "description": "Verified READMEs + real demos for Claude Code. Runs a repository's README quickstart in a sandbox, corrects documentation errors (never masking real code bugs), and captures real demos. Provides /proof verify and /proof demo.",
+  "author": {
+    "name": "ssamba1",
+    "url": "https://github.com/ssamba1"
+  },
+  "homepage": "https://github.com/ssamba1/repo-proof",
+  "repository": "https://github.com/ssamba1/repo-proof",
+  "license": "MIT",
+  "keywords": ["readme", "verify", "documentation", "testing", "developer-tools", "demo"]
+}
