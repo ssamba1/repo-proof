@@ -211,8 +211,8 @@ def main() -> int:
     t2 = None
     if args.run:
         print("Tier 2: cloning and verifying (networked, slower)...")
-        t2 = tier2()
-        for r in t2:
+        t2 = tier2() or None  # None (not []) so an empty/skipped run omits the section
+        for r in t2 or []:
             print(f"  {r['repo']}: {r['outcome']}")
 
     out = ROOT / "docs" / "benchmark.md"
