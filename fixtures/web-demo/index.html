@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RepoProof — verified quickstart</title>
+    <style>
+      :root {
+        --bg: #0f1420;
+        --panel: #161d2e;
+        --line: #243049;
+        --ink: #e8edf6;
+        --muted: #8b9bb4;
+        --ok: #3fb950;
+        --accent: #4c8dff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(1200px 600px at 70% -10%, #1b2540 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 32px;
+        border-bottom: 1px solid var(--line);
+      }
+      .logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--accent), #7b5cff);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+      }
+      header h1 {
+        font-size: 17px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      header .sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 36px 32px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(63, 185, 80, 0.12);
+        color: var(--ok);
+        border: 1px solid rgba(63, 185, 80, 0.35);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--ok);
+        box-shadow: 0 0 0 4px rgba(63, 185, 80, 0.18);
+      }
+      h2 {
+        font-size: 26px;
+        margin: 18px 0 6px;
+      }
+      .lede {
+        color: var(--muted);
+        margin: 0 0 28px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .card .k {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .card .v {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .term {
+        background: #0b0f18;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .term .bar {
+        display: flex;
+        gap: 7px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .term .bar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .term pre {
+        margin: 0;
+        padding: 16px 18px;
+        font: 13px/1.7 "SF Mono", "Cascadia Code", Consolas, monospace;
+        color: #cfe0ff;
+        white-space: pre-wrap;
+      }
+      .term .c {
+        color: var(--muted);
+      }
+      .term .g {
+        color: var(--ok);
+      }
+      .term .a {
+        color: var(--accent);
+      }
+      footer {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 0 32px 40px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo">✓</div>
+      <div>
+        <h1>RepoProof</h1>
+        <div class="sub">verified READMEs + real demos</div>
+      </div>
+    </header>
+    <main>
+      <span class="badge"><span class="dot"></span> Quickstart verified · exit 0</span>
+      <h2>example/web-app</h2>
+      <p class="lede">
+        The README quickstart was extracted, run in an isolated sandbox, and reached exit 0
+        with no edits required.
+      </p>
+      <div class="grid">
+        <div class="card"><div class="k">Outcome</div><div class="v" style="color: var(--ok)">VERIFIED</div></div>
+        <div class="card"><div class="k">Steps run</div><div class="v">2</div></div>
+        <div class="card"><div class="k">Edits needed</div><div class="v">0</div></div>
+      </div>
+      <div class="term">
+        <div class="bar">
+          <i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i>
+        </div>
+        <pre><span class="c"># proof demo --web http://localhost:8000</span>
+<span class="a">$</span> python -m http.server 8000
+<span class="c">Serving HTTP on 0.0.0.0 port 8000 ...</span>
+<span class="g">✓</span> page loaded, screenshot captured -> docs/web-demo.png</pre>
+      </div>
+    </main>
+    <footer>Captured by RepoProof — a real screenshot of a running page, not a mockup.</footer>
+  </body>
+</html>

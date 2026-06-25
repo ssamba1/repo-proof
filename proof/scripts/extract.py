@@ -93,6 +93,27 @@ _PROG_RE = re.compile(r"^[a-z][\w.+-]*$")
 # Lowercase connectives that betray a prose line masquerading as a command.
 _STOPWORDS = {"or", "and", "the", "a", "an", "with", "for", "to", "is", "are", "on", "in", "of"}
 
+# A demonstrable "run" shows the project doing its thing. Build/test/lint/bench invocations
+# are developer chores, not the user-facing quickstart — when something better exists we prefer
+# it. These are *demerited*, not excluded, so a repo whose only example is `cargo test` still
+# yields that rather than nothing.
+_NONRUN_SUBCMDS = {
+    "test", "build", "bench", "lint", "check", "fmt", "clippy", "vet",
+    "doc", "publish", "package", "coverage", "audit", "clean", "format",
+}  # fmt: skip
+_SUBCMD_TOOLS = {
+    "cargo", "go", "npm", "yarn", "pnpm", "bun", "dotnet", "mvn", "gradle",
+    "swift", "dart", "flutter", "composer", "rake", "deno",
+}  # fmt: skip
+# Heads that are *only ever* build/test drivers, whatever their arguments.
+_NONRUN_HEADS = {"pytest", "tox", "nox", "make", "cmake", "meson", "ninja",
+                 "rspec", "jest", "mocha", "vitest", "phpunit", "tic"}  # fmt: skip
+_RUN_DEMERIT = 50
+
+# Inline code spans in prose: a fallback source of run commands for READMEs that show usage
+# as `cmd args` in a sentence rather than in a fenced block (e.g. fastlane, jekyll).
+_INLINE_CODE = re.compile(r"`([^`]+)`")
+
 
 class _Block:
     __slots__ = ("lang", "lines", "start_line", "heading")
@@ -275,6 +296,88 @@ def _commands_in(block: _Block) -> list[Command]:
     return cmds
 
 
+def _run_demerit(cmd: Command) -> int:
+    """How much to penalize a candidate as 'not the demonstrable run'. 0 = a clean run."""
+    argv = [a.lower() for a in cmd.argv]
+    head = argv[0]
+    if head in _NONRUN_HEADS:
+        return _RUN_DEMERIT
+    if head in _SUBCMD_TOOLS and len(argv) > 1 and argv[1] in _NONRUN_SUBCMDS:
+        return _RUN_DEMERIT
+    return 0
+
+
+def _is_run_candidate(cmd: Command) -> bool:
+    return (
+        cmd.kind is StepKind.RUN
+        and cmd.argv[0].lower() not in _RUN_SKIP
+        and not _is_installer(cmd.argv[0])
+    )
+
+
+def _prose_heading_score(heading: str) -> int:
+    """Score a heading for prose extraction. Negative = do not mine inline commands here.
+
+    Deliberately stricter than fenced extraction: prose spans are only trusted under an
+    explicit usage/quickstart/example heading, so intro paragraphs and feature lists do not
+    get mistaken for the quickstart."""
+    if any(k in heading for k in _DEPRIORITIZE):
+        return -1
+    for rank, key in enumerate(_RUN_HEADINGS):
+        if key in heading:
+            return 100 - rank
+    return -1
+
+
+def _prose_candidates(readme: str) -> list[tuple[int, Command]]:
+    """Mine run commands from inline `code` spans and `$`-prefixed lines in prose under a
+    usage/quickstart heading. Returns (priority, command) in document order. Used both as a
+    fallback for READMEs with no fenced block *and* to outrank a fenced build/test command
+    (e.g. ripgrep, whose only fenced "run" is `cargo test` while `rg …` lives in prose)."""
+    out: list[tuple[int, Command]] = []
+    heading = ""
+    in_fence = False
+    in_comment = False
+    for i, raw in enumerate(readme.splitlines(), start=1):
+        line = raw
+        stripped = line.strip()
+        if in_comment:
+            if "-->" in stripped:
+                in_comment = False
+            continue
+        if stripped.startswith("<!--") and "-->" not in stripped:
+            in_comment = True
+            continue
+        if "<!--" in line:
+            line = re.sub(r"<!--.*?-->", "", line)
+            stripped = line.strip()
+        if re.match(r"^(```+|~~~+)", stripped):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        h = re.match(r"^#{1,6}\s+(.*)$", stripped)
+        if h:
+            heading = h.group(1).strip().lower()
+            continue
+        hscore = _prose_heading_score(heading)
+        if hscore < 0:
+            continue
+        spans: list[tuple[str, bool]] = []
+        body = _strip_prompt(stripped)
+        if body != stripped:  # an explicit `$ `/`> ` prompt — trust even a single token
+            spans.append((body, False))
+        spans.extend((m.group(1).strip(), True) for m in _INLINE_CODE.finditer(line))
+        for text, require_multi in spans:
+            cmd = _to_command(i, text)
+            if cmd is None or not _is_run_candidate(cmd):
+                continue
+            if require_multi and (len(cmd.argv) < 2 or not _PROG_RE.match(cmd.argv[0])):
+                continue  # a lone inline token is usually a filename/flag, not a command
+            out.append((hscore - _run_demerit(cmd), cmd))
+    return out
+
+
 def extract_quickstart(readme: str) -> list[Command]:
     """Return the ordered quickstart: install step(s) followed by the first run command.
 
@@ -298,19 +401,24 @@ def extract_quickstart(readme: str) -> list[Command]:
                 # Keep setup like `export API_KEY=<your-key>` so needs_input still surfaces.
                 install.append(cmd)
 
-    # Phase 2: the runnable example, preferring usage/example over install sections.
+    # Phase 2: the runnable example. Every eligible block contributes a candidate scored by
+    # (block priority - build/test demerit); fenced blocks are collected first so they win ties
+    # over prose. Inline prose commands (Phase 3) join the same pool, so a real `rg …` usage
+    # example outranks a fenced `cargo test`. Highest score wins; document order breaks ties.
     run: Command | None = None
+    candidates: list[tuple[int, int, Command]] = []
+    order = 0
     for block in sorted((b for b in blocks if _run_score(b) >= 0), key=_run_score, reverse=True):
+        bscore = _run_score(block)
         for cmd in _commands_in(block):
-            if (
-                cmd.kind is StepKind.RUN
-                and cmd.argv[0].lower() not in _RUN_SKIP
-                and not _is_installer(cmd.argv[0])
-            ):
-                run = cmd
-                break
-        if run is not None:
-            break
+            if _is_run_candidate(cmd):
+                candidates.append((bscore - _run_demerit(cmd), order, cmd))
+                order += 1
+    for score, cmd in _prose_candidates(readme):
+        candidates.append((score, order, cmd))
+        order += 1
+    if candidates:
+        run = max(candidates, key=lambda t: (t[0], -t[1]))[2]
 
     commands = list(install)
     if run is not None and run not in commands:

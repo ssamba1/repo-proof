@@ -213,5 +213,6 @@ Concrete, testable — "done" for v1 means all of:
 4. **Project/repo name + command prefix:** confirm `RepoProof` / `/proof`. Alternatives: `proofkit`,
    `truerepo`.
 5. **Distribution beyond Claude Code:** avalonreset ships Codex/Gemini installers too. v1 = Claude
-   Code only? *Recommend yes; port later.*
+   Code only? *Recommend yes; port later.* — **Done (v1.1):** `install-gemini.sh`/`.ps1` and
+   `install-codex.sh`/`.ps1` ship the package + native custom commands, scoped to each tool's home.
 ```

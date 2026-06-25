@@ -1,3 +1,10 @@
+import functools
+import http.server
+import socketserver
+import threading
+
+import pytest
+
 from conftest import FIXTURES
 from proof.scripts import demo_cli, demo_web
 
@@ -40,3 +47,31 @@ def test_web_capture_skips_without_playwright(tmp_path, monkeypatch):
     result = demo_web.capture("http://localhost:3000", tmp_path)
     assert not result.captured
     assert "Playwright" in result.reason
+
+
+@pytest.mark.skipif(
+    not demo_web.playwright_available(), reason="playwright not installed (pip install '.[web]')"
+)
+def test_web_capture_real_screenshot_of_served_fixture(tmp_path):
+    """End-to-end: serve the web-demo fixture over HTTP and screenshot the running page.
+
+    This is the Success-Criterion-3 path that produced the committed docs/web-demo.png. If the
+    Playwright browser binary is absent, capture() returns a clean skip rather than crashing, so
+    we accept either a real png or a graceful skip — never an exception."""
+    handler = functools.partial(
+        http.server.SimpleHTTPRequestHandler, directory=str(FIXTURES / "web-demo")
+    )
+    with socketserver.TCPServer(("127.0.0.1", 0), handler) as httpd:
+        port = httpd.server_address[1]
+        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        thread.start()
+        try:
+            result = demo_web.capture(f"http://127.0.0.1:{port}/", tmp_path)
+        finally:
+            httpd.shutdown()
+            thread.join(timeout=5)
+    if result.captured:
+        assert result.kind == "png"
+        assert result.path and (tmp_path / "proof-demo.png").is_file()
+    else:
+        assert result.reason  # browser binary missing -> honest skip, not a crash

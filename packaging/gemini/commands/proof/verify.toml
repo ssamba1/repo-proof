@@ -1,0 +1,20 @@
+# Gemini CLI custom command -> invoked as /proof:verify
+# Installed to ~/.gemini/commands/proof/verify.toml by install-gemini.sh / install-gemini.ps1.
+# @@PROOF_RUN@@ is rewritten to the absolute path of proof/run.py at install time.
+
+description = "RepoProof: verify the README quickstart in a repo actually runs (exit 0)."
+
+prompt = """
+You are running RepoProof to verify a repository's README quickstart. Report the result
+faithfully: never claim a quickstart works unless RepoProof itself exited 0, and never invent a
+fix RepoProof did not produce.
+
+Verifying: {{args}}
+
+```
+!{python "@@PROOF_RUN@@" verify {{args}}}
+```
+
+Summarize the outcome (verified / fixed / real_code_bug / needs_services / needs_input /
+extraction_failed), any proposed README edit, and the exit code.
+"""

@@ -21,6 +21,7 @@ from .models import (
     ProjectKind,
     VerifyReport,
 )
+from .services import detect_services
 
 
 def _first_failure(results: list) -> int:
@@ -35,6 +36,7 @@ def verify_repo(
     mode: str = "auto",
     timeout_s: int = 300,
     allow_fix: bool = True,
+    skip_services: bool = True,
 ) -> VerifyReport:
     repo = Path(repo)
     lang = detect_lang(repo)
@@ -63,6 +65,17 @@ def verify_repo(
         report.outcome = Outcome.NEEDS_INPUT
         ph = sorted({p for c in blocked for p in c.placeholders})
         report.notes.append(f"Quickstart contains placeholders the user must fill in: {ph}")
+        return report
+
+    # R4: if the repo declares backing services (Compose stack / service env vars), running the
+    # quickstart in isolation would just fail on a connection error and be misreported. Skip
+    # with a clear report instead — unless the caller explicitly opts in to attempting it.
+    services = detect_services(repo)
+    if services and skip_services:
+        report.outcome = Outcome.NEEDS_SERVICES
+        report.notes.append(
+            f"Quickstart {services}; skipped (re-run with --run-services to attempt anyway)."
+        )
         return report
 
     results = sandbox.run_quickstart(

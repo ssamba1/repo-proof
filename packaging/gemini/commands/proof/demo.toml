@@ -1,0 +1,19 @@
+# Gemini CLI custom command -> invoked as /proof:demo
+# Installed to ~/.gemini/commands/proof/demo.toml by install-gemini.sh / install-gemini.ps1.
+# @@PROOF_RUN@@ is rewritten to the absolute path of proof/run.py at install time.
+
+description = "RepoProof: capture a real demo (GIF/text for a CLI, PNG for a running web app)."
+
+prompt = """
+You are running RepoProof to capture a real demo of a repository. The artifact it writes is a
+genuine capture of the program running — not a mockup. Report exactly where it was written.
+
+Capturing: {{args}}
+
+```
+!{python "@@PROOF_RUN@@" demo {{args}}}
+```
+
+Report the artifact path and tool used. For a web project, tell the user to re-run with
+`--web <url>` against a running instance.
+"""

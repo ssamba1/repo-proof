@@ -169,6 +169,17 @@ $ python main.py
 Hello from my-cli
 ```
 
+**A web app** → `proof demo --web` screenshots the **running page** (a real capture, not a mockup):
+
+```console
+$ proof demo ./web-app --web http://localhost:8000
+demo captured [playwright] -> docs/web-demo.png
+```
+
+<img src="docs/web-demo.png" alt="RepoProof's real screenshot of a running web page, captured via proof demo --web" width="760">
+
+<sub><i>Real screenshot of the <a href="fixtures/web-demo/">web-demo fixture</a> served over HTTP and captured with Playwright — produced by the <code>demo --web</code> path, not a mockup.</i></sub>
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## The Integrity Rule
@@ -246,6 +257,14 @@ nothing outside `~/.claude`.
 ```
 /plugin marketplace add ssamba1/repo-proof
 /plugin install repo-proof@repo-proof
+```
+
+**Other agent CLIs** — RepoProof ships installers for them too. Each writes only inside that
+tool's own config home (`~/.gemini` / `~/.codex`), nothing else:
+
+```bash
+bash install-gemini.sh   # Gemini CLI  -> /proof:verify , /proof:demo   (Windows: ./install-gemini.ps1)
+bash install-codex.sh    # Codex CLI   -> /proof-verify , /proof-demo   (Windows: ./install-codex.ps1)
 ```
 
 Want a bare `proof` command on your PATH instead? `pip install .` (or `pipx install .`).

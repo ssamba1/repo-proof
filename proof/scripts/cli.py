@@ -32,6 +32,7 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         mode=args.mode,
         timeout_s=args.timeout,
         allow_fix=not args.no_fix,
+        skip_services=not args.run_services,
     )
     if args.json:
         print(report_mod.to_json(rep))
@@ -73,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--no-fix", action="store_true", help="Report only; do not propose fixes.")
     v.add_argument("--write", action="store_true", help="Apply proposed README edits in place.")
     v.add_argument("--json", action="store_true", help="Emit a JSON report.")
+    v.add_argument(
+        "--run-services",
+        action="store_true",
+        help="Attempt the quickstart even if the repo declares backing services.",
+    )
     v.set_defaults(func=_cmd_verify)
 
     d = sub.add_parser("demo", help="Capture a real demo (GIF/text for CLI, PNG for web).")

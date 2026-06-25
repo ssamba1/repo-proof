@@ -21,7 +21,7 @@ command (typical of libraries whose example is a code snippet, not a CLI invocat
 | chalk/chalk | node | lib | install_only | — |
 | sindresorhus/execa | node | lib | install_only | — |
 | expressjs/express | node | lib | found_run | `express /tmp/foo` |
-| BurntSushi/ripgrep | rust | cli | found_run | `cargo test --all` |
+| BurntSushi/ripgrep | rust | cli | found_run | `rg -n -w '[A-Z]+_SUSPEND'` |
 | sharkdp/bat | rust | cli | found_run | `bat README.md` |
 | sharkdp/fd | rust | cli | found_run | `fd -e zip -x unzip` |
 | spf13/cobra | go | lib | install_only | — |
@@ -35,13 +35,19 @@ command (typical of libraries whose example is a code snippet, not a CLI invocat
 ### Honest read
 
 `found_run` means *a* command was extracted, not that it is guaranteed the intended one.
-Manual review of this corpus: about **10/20** extracted the exact intended quickstart
-and **4/20** were correctly identified as install-only (libraries whose example is a
-code snippet, not a CLI invocation) — so ~**14/20 handled correctly**, up from a ~6/16
-baseline before the extractor was hardened. The misses fall into two buckets: a README
-that buries usage beneath a long install matrix (ripgrep), and READMEs with no fenced
-quickstart block at all (fastlane, Homebrew, jekyll).
+Manual review of this corpus: about **11/20** extracted the exact intended quickstart,
+**4/20** were correctly identified as install-only (libraries whose example is a code
+snippet, not a CLI invocation), and **3/20** were correctly reported as having *no*
+in-repo quickstart at all — fastlane, Homebrew, and jekyll ship landing-page READMEs
+whose actual getting-started lives off-site, so `none` is the honest answer, not a miss.
+That is ~**18/20 handled correctly**, up from a ~6/16 baseline. Two soft spots remain:
+fzf (extracts the shell-completion `eval` line) and glow (extracts a `nix-shell` wrapper)
+— *a* runnable command, just not the cleanest demo of the tool itself.
 
-**Known limitation / roadmap:** install-method-heavy READMEs, and READMEs that show usage
-as prose or images rather than in a fenced shell block.
+ripgrep used to extract `cargo test --all` (its only fenced 'run' block); two-phase
+ranking now demerits build/test commands and mines the `rg …` usage example from prose,
+so it extracts the intended quickstart instead.
+
+**Known limitation / roadmap:** READMEs that show usage only as an image/asciicast, and
+picking the single *best* example when a tool documents many equally-valid invocations.
 

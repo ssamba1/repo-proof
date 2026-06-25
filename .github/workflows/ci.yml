@@ -20,11 +20,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Ruby is not guaranteed on every runner image, so install it explicitly. This makes the
+      # ruby-* fixture integration tests (verify ruby-working / fix ruby-broken) actually run in
+      # CI on both Ubuntu and Windows instead of being skipped.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
       - name: Install dev tooling
         run: python -m pip install --upgrade ruff pytest
 
-      # Node and Rust are preinstalled on GitHub runners, so the Node/Rust integration
-      # tests run here. Go and Docker tests skip cleanly when those are absent.
+      # Node and Rust are preinstalled on GitHub runners and Ruby is set up above, so the
+      # Node/Rust/Ruby integration tests run here. Go and Docker tests skip cleanly when absent.
       - name: Lint
         run: python -m ruff check .
 
