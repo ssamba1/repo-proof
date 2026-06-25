@@ -47,6 +47,21 @@ def test_doc_typo_is_fixed(tmp_path):
     assert d.suggested_fix.argv == ("python", "main.py")
 
 
+def test_ruby_doc_typo_is_fixed(tmp_path):
+    # Regression: .rb filenames must be recognized as path args so a ruby README typo
+    # (man.rb -> main.rb) is fixable, not misreported as an unfixable doc error.
+    (tmp_path / "main.rb").write_text("puts 'hi'", encoding="utf-8")
+    res = _result(
+        stderr="ruby: No such file or directory -- man.rb (LoadError)",
+        raw="ruby man.rb",
+        argv=["ruby", "man.rb"],
+    )
+    d = classify_failure(res, tmp_path)
+    assert d.outcome is Outcome.FIXED
+    assert d.suggested_fix is not None
+    assert d.suggested_fix.argv == ("ruby", "main.rb")
+
+
 def test_integrity_code_bug_wins_over_path_lookalike(tmp_path):
     # A failure that mentions a missing-ish file BUT clearly shows a repo code crash must
     # be classified as a real bug, never silently "fixed".

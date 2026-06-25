@@ -60,7 +60,7 @@ def _candidate_paths(repo: Path) -> list[str]:
 
 
 def _looks_like_path_arg(token: str) -> bool:
-    return token.endswith((".py", ".js", ".mjs", ".ts", ".rs", ".go")) or "/" in token
+    return token.endswith((".py", ".js", ".mjs", ".ts", ".rs", ".go", ".rb")) or "/" in token
 
 
 def classify_failure(result: RunResult, repo: Path) -> Diagnosis:
